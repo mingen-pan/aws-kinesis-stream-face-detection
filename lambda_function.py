@@ -44,7 +44,8 @@ def lambda_handler(event, context):
 
         # get the frame image
         timestamp = face_recognition_record["InputInformation"]["KinesisVideo"]["ProducerTimestamp"]
-        image = kvs_handler.get_image_from_stream(timestamp)
+        offset = face_recognition_record["InputInformation"]["KinesisVideo"]["FrameOffsetInSeconds"]
+        image = kvs_handler.get_image_from_stream(timestamp + offset)
 
         # upload the frame image to S3 for indexing faces
         # key = producer_timestamp + _ + frame
