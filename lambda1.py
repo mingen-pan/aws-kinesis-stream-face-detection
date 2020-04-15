@@ -27,7 +27,6 @@ def decode_base64_and_load_json(data):
 
 def lambda_handler(event, context):
     print(event)
-    from os import listdir
     for i, record in enumerate(event["Records"]):
         face_recognition_record = decode_base64_and_load_json(record["kinesis"]["data"])
         print(face_recognition_record)

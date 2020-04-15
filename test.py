@@ -1,39 +1,60 @@
 import json
 import unittest
 import cv2
-import numpy as np
 
 from dynamo_handler import DynamoHandler
 from kvs_handler import KVSHandler, extract_face
+from lambda1 import decode_base64_and_load_json, lambda_handler
 from reko_handler import RekoHanlder
 from s3_handler import S3Handler
 from util import yaml_handler
 
 env = yaml_handler('./aws_env.yaml')
 
-response_json = """{"InputInformation": {"KinesisVideo": {"StreamArn": 
-"arn:aws:kinesisvideo:us-east-1:090918556265:stream/macbook-camera/1586555054989", "FragmentNumber": 
-"91343852333181541341309040055593237511723545694", "ServerTimestamp": 1586738207.792, "ProducerTimestamp": 
-1586738207.249, "FrameOffsetInSeconds": 0.0020000000949949026}}, "StreamProcessorInformation": {"Status": "RUNNING"}, 
-"FaceSearchResponse": [{"DetectedFace": {"BoundingBox": {"Height": 0.4602379, "Width": 0.24975915, 
-"Left": 0.38193148, "Top": 0.5065514}, "Confidence": 99.999985, "Landmarks": [{"X": 0.4419924, "Y": 0.6689897, 
-"Type": "eyeLeft"}, {"X": 0.5569588, "Y": 0.6684084, "Type": "eyeRight"}, {"X": 0.45489523, "Y": 0.84728855, 
-"Type": "mouthLeft"}, {"X": 0.5495061, "Y": 0.84689164, "Type": "mouthRight"}, {"X": 0.5027462, "Y": 0.7621452, 
-"Type": "nose"}], "Pose": {"Pitch": -3.3248196, "Roll": -1.7610033, "Yaw": -10.993803}, "Quality": {"Brightness": 
-84.072655, "Sharpness": 73.3221}}, "MatchedFaces": [{"Similarity": 99.89643, "Face": {"BoundingBox": {"Height": 
-0.685086, "Width": 0.516942, "Left": 0.160031, "Top": 0.274535}, "FaceId": "be032393-962b-48bd-8c1e-c2e9d7f999f0", 
-"Confidence": 99.9996, "ImageId": "74820485-3ae7-3da7-a2cb-b35b2d5ae4f0"}}]}]} """
+response_json = """{
+  "Records": [
+    {
+      "kinesis": {
+        "kinesisSchemaVersion": "1.0",
+        "partitionKey": "8585fc21-052b-45b5-9a13-55844a87eaa9",
+        "sequenceNumber": "49605974038509424079760648011085574233984981398739484674",
+        "data": "eyJJbnB1dEluZm9ybWF0aW9uIjp7IktpbmVzaXNWaWRlbyI6eyJTdHJlYW1Bcm4iOiJhcm46YXdzOmtpbmVzaXN2aWRlbzp1cy1lYXN0LTE6MDkwOTE4NTU2MjY1OnN0cmVhbS9tYWNib29rLWNhbWVyYS8xNTg2NTU1MDU0OTg5IiwiRnJhZ21lbnROdW1iZXIiOiI5MTM0Mzg1MjMzMzE4MTU3NTk5MzcyNjYxOTczMjAwNTcxNDkyODE2NTQ2MTI0MyIsIlNlcnZlclRpbWVzdGFtcCI6MS41ODY5MTYzNjAyNjVFOSwiUHJvZHVjZXJUaW1lc3RhbXAiOjEuNTg2OTE2MzU5OTc5RTksIkZyYW1lT2Zmc2V0SW5TZWNvbmRzIjowLjB9fSwiU3RyZWFtUHJvY2Vzc29ySW5mb3JtYXRpb24iOnsiU3RhdHVzIjoiUlVOTklORyJ9LCJGYWNlU2VhcmNoUmVzcG9uc2UiOlt7IkRldGVjdGVkRmFjZSI6eyJCb3VuZGluZ0JveCI6eyJIZWlnaHQiOjAuNDcwODg4ODIsIldpZHRoIjowLjI2MjA3MTA0LCJMZWZ0IjowLjMyMzEwODUyLCJUb3AiOjAuNTE3NTY3OX0sIkNvbmZpZGVuY2UiOjk5Ljk5OTk0LCJMYW5kbWFya3MiOlt7IlgiOjAuMzgzOTU3NTQsIlkiOjAuNjkwNTI0MDQsIlR5cGUiOiJleWVMZWZ0In0seyJYIjowLjUwODIzNTM0LCJZIjowLjY3OTI4MDM0LCJUeXBlIjoiZXllUmlnaHQifSx7IlgiOjAuNDA3NTg2NCwiWSI6MC44NzcyNzcxLCJUeXBlIjoibW91dGhMZWZ0In0seyJYIjowLjUwOTkwMzIsIlkiOjAuODY4MTczODQsIlR5cGUiOiJtb3V0aFJpZ2h0In0seyJYIjowLjQ1MTc1MzgsIlkiOjAuNzc0MDUzOTMsIlR5cGUiOiJub3NlIn1dLCJQb3NlIjp7IlBpdGNoIjotMy4yOTU5ODksIlJvbGwiOi02Ljk1MTUzMTQsIllhdyI6LTI1LjQyNzc3fSwiUXVhbGl0eSI6eyJCcmlnaHRuZXNzIjo3Ny4xNDE4NCwiU2hhcnBuZXNzIjoyNi4xNzczNjh9fSwiTWF0Y2hlZEZhY2VzIjpbeyJTaW1pbGFyaXR5Ijo5OS44NTY0OSwiRmFjZSI6eyJCb3VuZGluZ0JveCI6eyJIZWlnaHQiOjAuNTM2ODc4LCJXaWR0aCI6MC40OTI1NzIsIkxlZnQiOjAuMDkxNDA3NywiVG9wIjowLjI4NTUzM30sIkZhY2VJZCI6ImFjZTg1YTcwLTlhMTAtNGM5MS1hZmM5LTNiM2Y4N2MwODg3ZSIsIkNvbmZpZGVuY2UiOjEwMC4wLCJJbWFnZUlkIjoiMDYyYTBiZjMtODdlZC0zMWUzLWE0ZWYtZTY4NzdmOGVmMjQ2In19LHsiU2ltaWxhcml0eSI6OTkuODIyNDY0LCJGYWNlIjp7IkJvdW5kaW5nQm94Ijp7IkhlaWdodCI6MC42ODUwODYsIldpZHRoIjowLjUxNjk0MiwiTGVmdCI6MC4xNjAwMzEsIlRvcCI6MC4yNzQ1MzV9LCJGYWNlSWQiOiJiZTAzMjM5My05NjJiLTQ4YmQtOGMxZS1jMmU5ZDdmOTk5ZjAiLCJDb25maWRlbmNlIjo5OS45OTk2LCJJbWFnZUlkIjoiNzQ4MjA0ODUtM2FlNy0zZGE3LWEyY2ItYjM1YjJkNWFlNGYwIn19XX1dfQ==",
+        "approximateArrivalTimestamp": 1586916363.192
+      },
+      "eventSource": "aws:kinesis",
+      "eventVersion": "1.0",
+      "eventID": "shardId-000000000000:49605974038509424079760648011085574233984981398739484674",
+      "eventName": "aws:kinesis:record",
+      "invokeIdentityArn": "arn:aws:iam::090918556265:role/LambdaKinesis",
+      "awsRegion": "us-east-1",
+      "eventSourceARN": "arn:aws:kinesis:us-east-1:090918556265:stream/face-stream/consumer/face_consumer:1586654788"
+    }
+  ]
+}
+"""
 
 
 class KVSTest(unittest.TestCase):
 
+    def test_lambda(self):
+        event = json.loads(response_json)
+        lambda_handler(event, None)
+
     def test_print_image(self):
+        event = json.loads(response_json)
         handler = KVSHandler(env["arn_kvs"])
         s3_handler = S3Handler("visitor-images")
         reko_handler = RekoHanlder("Faces", "FaceDetect")
         dynamo_handler = DynamoHandler("visitors")
 
-        face_recognition_record = json.loads(response_json)
+        record = None
+        for _, r in enumerate(event["Records"]):
+            record = r
+            break
+        if record is None:
+            return
+
+        face_recognition_record = decode_base64_and_load_json(record["kinesis"]["data"])
         ProducerTimestamp = face_recognition_record["InputInformation"]["KinesisVideo"]["ProducerTimestamp"]
         image = handler.get_image_from_stream(ProducerTimestamp)
         # cv2.imwrite("image.jpg", image)

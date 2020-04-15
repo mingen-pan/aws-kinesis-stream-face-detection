@@ -11,10 +11,7 @@ class RekoHanlder:
         self.stream_processor_name = stream_processor_name
         self.client = boto3.client(
             'rekognition',
-            region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token']
+            region_name=env['aws_default_region']
         )
 
     def index_face(self, bucket, image):

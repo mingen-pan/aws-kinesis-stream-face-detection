@@ -14,19 +14,11 @@ class LifeCycleController:
         bucket = "visitor-images"
 
         self.rekoginition_client = boto3.client(
-            'rekognition',
-            region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token']
+            'rekognition'
         )
 
         self.kinesis_client = boto3.client(
-            'kinesis',
-            region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token']
+            'kinesis'
         )
 
         self.s3_handler = S3Handler(bucket)

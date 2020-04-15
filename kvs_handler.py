@@ -10,10 +10,7 @@ env = yaml_handler('./aws_env.yaml')
 def get_endpoint(arn):
     kv_client = boto3.client(
         'kinesisvideo',
-        region_name=env['aws_default_region'],
-        aws_access_key_id=env['aws_access_key_id'],
-        aws_secret_access_key=env['aws_secret_access_key'],
-        aws_session_token=env['aws_session_token']
+        region_name=env['aws_default_region']
     )
     response = kv_client.get_data_endpoint(
         StreamARN=arn,
@@ -49,9 +46,6 @@ class KVSHandler:
         self.client = boto3.client(
             'kinesis-video-media',
             region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token'],
             endpoint_url=get_endpoint(arn)
         )
         self.stream_arn = arn

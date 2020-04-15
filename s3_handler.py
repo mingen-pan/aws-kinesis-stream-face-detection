@@ -8,11 +8,7 @@ env = yaml_handler('./aws_env.yaml')
 class S3Handler:
     def __init__(self, bucket):
         self.client = boto3.client(
-            's3',
-            region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token']
+            's3'
         )
         self.bucket_name = bucket
 
