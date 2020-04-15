@@ -6,7 +6,7 @@ from datetime import datetime
 
 env = yaml_handler('./aws_env.yaml')
 
-TMP_DIR = "./tmp"
+TMP_DIR = "/tmp"
 
 def get_endpoint(arn):
     kv_client = boto3.client(

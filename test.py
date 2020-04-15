@@ -74,9 +74,9 @@ class KVSTest(unittest.TestCase):
             face_image = extract_face(image, box, box_ratio=2)
 
             print("face: ", face_image.shape)
-            cv2.imwrite("./tmp/image.jpg", image)
-            cv2.imwrite("./tmp/face.jpg", face_image)
-            s3_handler.upload("./tmp/face.jpg", "face.jpg")
+            cv2.imwrite("/tmp/image.jpg", image)
+            cv2.imwrite("/tmp/face.jpg", face_image)
+            s3_handler.upload("/tmp/face.jpg", "face.jpg")
             faces = reko_handler.index_faces(s3_handler.bucket_name, "face.jpg")
             if len(faces) == 0:
                 return
