@@ -14,13 +14,11 @@ class RekoHanlder:
             region_name=env['aws_default_region']
         )
 
-    def index_face(self, bucket, image):
+    def index_faces(self, bucket, image):
         response = self.client.index_faces(CollectionId=self.collection_id,
                                            Image={'S3Object': {'Bucket': bucket, 'Name': image}},
-                                           MaxFaces=1,
+                                           MaxFaces=10,
                                            QualityFilter="AUTO",
                                            DetectionAttributes=['ALL'])
 
-        for record in response["FaceRecords"]:
-            return record["Face"]["FaceId"]
-        return None
+        return [record["Face"] for record in response["FaceRecords"]]

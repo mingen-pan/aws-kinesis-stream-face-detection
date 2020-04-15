@@ -4,7 +4,7 @@ import cv2
 
 from dynamo_handler import DynamoHandler
 from kvs_handler import KVSHandler, extract_face
-from lambda1 import decode_base64_and_load_json, lambda_handler
+from lambda_function import decode_base64_and_load_json, lambda_handler
 from reko_handler import RekoHanlder
 from s3_handler import S3Handler
 from util import yaml_handler
@@ -77,7 +77,10 @@ class KVSTest(unittest.TestCase):
             cv2.imwrite("./tmp/image.jpg", image)
             cv2.imwrite("./tmp/face.jpg", face_image)
             s3_handler.upload("./tmp/face.jpg", "face.jpg")
-            face_id = reko_handler.index_face(s3_handler.bucket_name, "face.jpg")
+            faces = reko_handler.index_faces(s3_handler.bucket_name, "face.jpg")
+            if len(faces) == 0:
+                return
+            face_id = faces[0]["FaceId"]
             print(face_id)
 
             if dynamo_handler.exist(face_id):

@@ -6,6 +6,7 @@ from datetime import datetime
 
 env = yaml_handler('./aws_env.yaml')
 
+TMP_DIR = "./tmp"
 
 def get_endpoint(arn):
     kv_client = boto3.client(
@@ -20,11 +21,11 @@ def get_endpoint(arn):
 
 
 def extract_frame(payload):
-    with open('./tmp/stream.mkv', 'wb+') as f:
+    with open(f'{TMP_DIR}/stream.mkv', 'wb+') as f:
         streamBody = payload.read(1024 * 128)
         f.write(streamBody)
         # use openCV to get a frame
-        cap = cv2.VideoCapture('./tmp/stream.mkv')
+        cap = cv2.VideoCapture(f'{TMP_DIR}/stream.mkv')
         succeeded, frame = cap.read()
         if not succeeded:
             raise RuntimeError("cannot read a frame")
@@ -36,8 +37,6 @@ def extract_face(image, box, box_ratio=1):
     left = int(max(0, box["Left"] - 0.5 * (box_ratio - 1) * box["Width"]) * image.shape[1])
     height = int((box["Height"] * box_ratio) * image.shape[0])
     width = int((box["Width"] * box_ratio) * image.shape[1])
-    print("ratio: ", top, left, height, width)
-
     return image[top:top + height, left: left + width]
 
 
