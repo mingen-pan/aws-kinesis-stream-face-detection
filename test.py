@@ -2,11 +2,11 @@ import json
 import unittest
 import cv2
 
-from dynamo_handler import DynamoHandler
-from kvs_handler import KVSHandler, extract_face
+from handler.dynamo_handler import DynamoHandler
+from handler.kvs_handler import KVSHandler, extract_face
 from lambda_function import decode_base64_and_load_json, lambda_handler
-from reko_handler import RekoHanlder
-from s3_handler import S3Handler
+from handler.reko_handler import RekoHanlder
+from handler.s3_handler import S3Handler
 from util import yaml_handler
 
 env = yaml_handler('./aws_env.yaml')
@@ -88,3 +88,4 @@ class KVSTest(unittest.TestCase):
             else:
                 dynamo_handler.create_image_record(face_id, s3_handler.bucket_name, "face.jpg")
             break
+

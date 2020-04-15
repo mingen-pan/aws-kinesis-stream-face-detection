@@ -1,6 +1,6 @@
 import boto3
 
-from s3_handler import S3Handler
+from handler.s3_handler import S3Handler
 from util import yaml_handler
 
 env = yaml_handler('./aws_env.yaml')
