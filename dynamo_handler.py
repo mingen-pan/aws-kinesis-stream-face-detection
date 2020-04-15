@@ -94,7 +94,7 @@ class DynamoHandler:
 
     def exist(self, face_id):
         try:
-            self.client.get_item(
+            response = self.client.get_item(
                 TableName=self.table_name,
                 Key={
                     self.index: {
@@ -103,8 +103,10 @@ class DynamoHandler:
                 },
                 ProjectionExpression=f"{self.index}",
             )
-            return True
+            return "Item" in response
         except Exception as e:
+            print(e)
             if e.__class__.__name__ == "ResourceNotFoundException":
                 return False
-        return None
+            else:
+                raise e

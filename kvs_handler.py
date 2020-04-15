@@ -30,7 +30,7 @@ def extract_frame(payload):
         cap = cv2.VideoCapture('./tmp/stream.mkv')
         succeeded, frame = cap.read()
         if not succeeded:
-            return None
+            raise RuntimeError("cannot read a frame")
         return frame
 
 
