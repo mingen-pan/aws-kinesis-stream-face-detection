@@ -1,6 +1,8 @@
 import json
 from base64 import b64decode
 
+import sys
+sys.path.insert(0, '/opt/python')
 import cv2
 
 from dynamo_handler import DynamoHandler
@@ -24,20 +26,22 @@ def decode_base64_and_load_json(data):
 
 
 def lambda_handler(event, context):
+    print(event)
+    from os import listdir
     for i, record in enumerate(event["Records"]):
         face_recognition_record = decode_base64_and_load_json(record["kinesis"]["data"])
-
+        print(face_recognition_record)
         # only process the record with faces
         if len(face_recognition_record["FaceSearchResponse"]) == 0:
             continue
 
-        arn_kvs = face_recognition_record["InputInformation"]["StreamArn"]
+        arn_kvs = face_recognition_record["InputInformation"]["KinesisVideo"]["StreamArn"]
         kvs_handler = KVSHandler(arn_kvs)
         s3_handler = S3Handler(bucket)
         reko_handler = RekoHanlder(collection_id, stream_processor_name)
         dynamo_handler = DynamoHandler(db_name)
 
-        timestamp = face_recognition_record["InputInformation"]["ProducerTimestamp"]
+        timestamp = face_recognition_record["InputInformation"]["KinesisVideo"]["ProducerTimestamp"]
         image = kvs_handler.get_image_from_stream(timestamp)
 
         for face_search_response in face_recognition_record["FaceSearchResponse"]:
