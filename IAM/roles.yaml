@@ -1,0 +1,8 @@
+Recognition:
+  - RekoStreamProcessor
+LambdaKinesis:
+  - AmazonS3FullAccess
+  - AmazonDynamoDBFullAccess
+  - AmazonRekognitionFullAccess
+  - AmazonKinesisVideoStreamsFullAccess
+  - AWSLambdaKinesisExecutionRole
