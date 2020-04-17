@@ -11,34 +11,47 @@ class DynamoHandler:
         self.index = index
         self.client = boto3.client(
             "dynamodb",
-            region_name=env['aws_default_region'],
-            aws_access_key_id=env['aws_access_key_id'],
-            aws_secret_access_key=env['aws_secret_access_key'],
-            aws_session_token=env['aws_session_token']
+            region_name=env['aws_default_region']
         )
 
     def create(self, index="faceId"):
-        self.index = index
-        self.client.create_table(
-            TableName=self.table_name,
-            KeySchema=[
-                {
-                    'AttributeName': index,
-                    'KeyType': 'HASH'
+        print("Creating DynamoDB: ", self.table_name)
+        try:
+            self.index = index
+            self.client.create_table(
+                TableName=self.table_name,
+                KeySchema=[
+                    {
+                        'AttributeName': index,
+                        'KeyType': 'HASH'
+                    }
+                ],
+                AttributeDefinitions=[
+                    {
+                        'AttributeName': index,
+                        'AttributeType': 'S'
+                    }
+                ],
+                ProvisionedThroughput={
+                    'ReadCapacityUnits': 25,
+                    'WriteCapacityUnits': 25
                 }
-            ],
-            AttributeDefinitions=[
-                {
-                    'AttributeName': index,
-                    'AttributeType': 'S'
-                }
-            ],
-            ProvisionedThroughput={
-                'ReadCapacityUnits': 25,
-                'WriteCapacityUnits': 25
-            }
-        )
-        print(f"Table {self.table_name} created")
+            )
+            print('Done...')
+        except Exception as e:
+            print(e)
+        print("")
+
+    def delete(self):
+        print("Deleting DynamoDB: ", self.table_name)
+        try:
+            self.client.delete_table(
+                TableName=self.table_name
+            )
+            print('Done...')
+        except Exception as e:
+            print(e)
+        print("")
 
     def create_image_record(self, face_id, bucket, key):
         item = {

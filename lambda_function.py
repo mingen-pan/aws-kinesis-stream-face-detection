@@ -7,12 +7,9 @@ sys.path.insert(0, '/opt/python')
 import cv2
 
 from handler.dynamo_handler import DynamoHandler
-from handler.kvs_handler import KVSHandler, extract_face, TMP_DIR
+from handler.kv_media_handler import KVMediaHandler, extract_face, TMP_DIR
 from handler.reko_handler import RekoHanlder
 from handler.s3_handler import S3Handler
-from util import yaml_handler
-
-env = yaml_handler('./aws_env.yaml')
 
 collection_id = 'Faces'
 stream_processor_name = 'FaceDetect'
@@ -37,7 +34,7 @@ def lambda_handler(event, context):
 
         # initialize the handler
         arn_kvs = face_recognition_record["InputInformation"]["KinesisVideo"]["StreamArn"]
-        kvs_handler = KVSHandler(arn_kvs)
+        kvs_handler = KVMediaHandler(arn_kvs)
         s3_handler = S3Handler(bucket)
         reko_handler = RekoHanlder(collection_id, stream_processor_name)
         dynamo_handler = DynamoHandler(db_name)
@@ -45,7 +42,7 @@ def lambda_handler(event, context):
         # get the frame image
         timestamp = face_recognition_record["InputInformation"]["KinesisVideo"]["ProducerTimestamp"]
         offset = face_recognition_record["InputInformation"]["KinesisVideo"]["FrameOffsetInSeconds"]
-        image = kvs_handler.get_image_from_stream(timestamp + offset)
+        image = kvs_handler.get_image_from_stream(timestamp, offset)
 
         # upload the frame image to S3 for indexing faces
         # key = producer_timestamp + _ + frame

@@ -3,7 +3,7 @@ import unittest
 import cv2
 
 from handler.dynamo_handler import DynamoHandler
-from handler.kvs_handler import KVSHandler, extract_face
+from handler.kv_media_handler import KVMediaHandler, extract_face
 from lambda_function import decode_base64_and_load_json, lambda_handler
 from handler.reko_handler import RekoHanlder
 from handler.s3_handler import S3Handler
@@ -23,7 +23,7 @@ class KVSTest(unittest.TestCase):
 
     def test_print_image(self):
         event = json.loads(response_json)
-        handler = KVSHandler(env["arn_kvs"])
+        handler = KVMediaHandler(env["arn_kvs"])
         s3_handler = S3Handler("visitor-images")
         reko_handler = RekoHanlder("Faces", "FaceDetect")
         dynamo_handler = DynamoHandler("visitors")

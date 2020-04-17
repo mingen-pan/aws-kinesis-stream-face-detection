@@ -8,6 +8,7 @@ env = yaml_handler('./aws_env.yaml')
 
 TMP_DIR = "/tmp"
 
+
 def get_endpoint(arn):
     kv_client = boto3.client(
         'kinesisvideo',
@@ -20,16 +21,17 @@ def get_endpoint(arn):
     return response['DataEndpoint']
 
 
-def extract_frame(payload):
+# TODO: use the offset to extract the correct frame from this payload
+def extract_frame(payload, offset):
     with open(f'{TMP_DIR}/stream.mkv', 'wb+') as f:
         streamBody = payload.read(1024 * 128)
         f.write(streamBody)
         # use openCV to get a frame
-        cap = cv2.VideoCapture(f'{TMP_DIR}/stream.mkv')
-        succeeded, frame = cap.read()
-        if not succeeded:
-            raise RuntimeError("cannot read a frame")
-        return frame
+    cap = cv2.VideoCapture(f'{TMP_DIR}/stream.mkv')
+    succeeded, frame = cap.read()
+    if not succeeded:
+        raise RuntimeError("cannot read a frame")
+    return frame
 
 
 def extract_face(image, box, box_ratio=1):
@@ -40,7 +42,7 @@ def extract_face(image, box, box_ratio=1):
     return image[top:top + height, left: left + width]
 
 
-class KVSHandler:
+class KVMediaHandler:
     def __init__(self, arn):
         self.client = boto3.client(
             'kinesis-video-media',
@@ -49,7 +51,7 @@ class KVSHandler:
         )
         self.stream_arn = arn
 
-    def get_image_from_stream(self, timestamp, selector="PRODUCER_TIMESTAMP"):
+    def get_image_from_stream(self, timestamp, offset, selector="PRODUCER_TIMESTAMP"):
         dt = datetime.fromtimestamp(timestamp)
         response = self.client.get_media(
             StreamARN=self.stream_arn,
@@ -60,4 +62,4 @@ class KVSHandler:
         )
         print('ContentType: ', response["ContentType"])
         payload = response["Payload"]
-        return extract_frame(payload)
+        return extract_frame(payload, offset)
