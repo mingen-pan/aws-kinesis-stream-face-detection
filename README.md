@@ -1,0 +1,1 @@
+# Face Detection Based on AWS Kinesis Stream
